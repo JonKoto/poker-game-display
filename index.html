@@ -141,6 +141,33 @@
     border-color: #6fcf97;
   }
 
+  .announce-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 8px 14px;
+    background: #2a1a3e;
+    border: 2px solid #e94560;
+    border-radius: 10px;
+    color: #e94560;
+    font-size: clamp(14px, 2vw, 17px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s;
+    margin-bottom: 6px;
+  }
+  .announce-btn:active {
+    background: #3a2040;
+    transform: scale(0.96);
+  }
+  .announce-btn.speaking {
+    background: #3a2040;
+    border-color: #fff;
+    color: #fff;
+  }
+
   .notes-bar {
     display: flex;
     align-items: center;
@@ -186,6 +213,7 @@
 
   <div class="soundboard-section">
     <div class="section-label">Soundboard</div>
+    <button class="announce-btn" id="announce-btn" onclick="announceGame()">Announce Game</button>
     <div class="sound-grid" id="sound-grid"></div>
   </div>
 
@@ -251,6 +279,23 @@
       };
       grid.appendChild(btn);
     });
+  }
+
+  function announceGame() {
+    const parts = [];
+    if (state.game) parts.push(state.game);
+    if (state.qualifier) parts.push(state.qualifier);
+    if (state.boards) {
+      const n = Number(state.boards);
+      if (!isNaN(n)) {
+        parts.push(n + " Board" + (n > 1 ? "s" : ""));
+      } else {
+        parts.push(state.boards);
+      }
+    }
+    if (!parts.length) return;
+    const btn = document.getElementById("announce-btn");
+    speak(parts.join(", "), btn);
   }
 
   function speak(text, btn) {
