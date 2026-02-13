@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poker Display">
+<title>Poker Game Display</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  .page {
+    display: grid;
+    grid-template-rows: 1fr auto auto auto auto;
+    height: 100%;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .banner {
+    background: #16213e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid #0f3460;
+    overflow: hidden;
+  }
+  .banner-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: clamp(48px, 9vw, 96px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .banner-placeholder { color: #444; }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #555;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .selectors {
+    padding: 8px 16px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .selector-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .selector-row .section-label {
+    width: 72px;
+    display: flex;
+    align-items: center;
+  }
+  .selector-row .chips {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: #2a2a4a;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    color: #999;
+    font-size: clamp(13px, 1.8vw, 16px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    flex: 1;
+    min-width: 0;
+  }
+  .chip:active { background: #3a3a6a; }
+  .chip.selected {
+    border-color: #e94560;
+    background: #3a2040;
+    color: #fff;
+  }
+
+  .soundboard-section {
+    padding: 6px 16px 6px;
+    border-top: 1px solid #0f3460;
+  }
+  .soundboard-section .section-label { margin-bottom: 6px; display: block; }
+  .sound-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .sound-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 6px 14px;
+    background: #1a3a2e;
+    border: 2px solid #2a5a4a;
+    border-radius: 10px;
+    color: #6fcf97;
+    font-size: clamp(13px, 1.8vw, 16px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .sound-btn:active {
+    background: #2a5a4a;
+    transform: scale(0.96);
+  }
+  .sound-btn.speaking {
+    background: #2a5a4a;
+    border-color: #6fcf97;
+  }
+
+  .notes-bar {
+    display: flex;
+    align-items: center;
+    background: #16213e;
+    padding: 8px 16px;
+    gap: 10px;
+    border-top: 1px solid #0f3460;
+  }
+  .notes-bar-text {
+    flex: 1;
+    font-size: 15px;
+    color: #aaa;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .notes-placeholder { color: #444; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <a href="admin.html" style="position:fixed;top:8px;right:12px;z-index:10;font-size:11px;color:#444;text-decoration:none;">Admin</a>
+  <div class="banner">
+    <div class="banner-text" id="banner-text"><span class="banner-placeholder">Select a Game</span></div>
+  </div>
+
+  <div class="selectors">
+    <div class="selector-row">
+      <div class="section-label">Game</div>
+      <div class="chips" id="game-chips"></div>
+    </div>
+    <div class="selector-row">
+      <div class="section-label">Qualifier</div>
+      <div class="chips" id="qualifier-chips"></div>
+    </div>
+    <div class="selector-row">
+      <div class="section-label">Boards</div>
+      <div class="chips" id="boards-chips"></div>
+    </div>
+  </div>
+
+  <div class="soundboard-section">
+    <div class="section-label">Soundboard</div>
+    <div class="sound-grid" id="sound-grid"></div>
+  </div>
+
+  <div class="notes-bar">
+    <div class="section-label">Notes</div>
+    <div class="notes-bar-text" id="notes-text"><span class="notes-placeholder">No notes</span></div>
+  </div>
+</div>
+
+<script src="storage.js"></script>
+<script>
+  let state = loadData("state");
+  let games = loadData("games");
+  let qualifiers = loadData("qualifiers");
+  let boards = loadData("boards");
+  let sounds = loadData("sounds");
+
+  function buildChips() {
+    buildChipRow("game-chips", games, g => {
+      state.game = state.game === g ? "" : g;
+      saveData("state", state);
+      render();
+    });
+    buildChipRow("qualifier-chips", qualifiers, q => {
+      state.qualifier = state.qualifier === q ? "" : q;
+      saveData("state", state);
+      render();
+    });
+    buildChipRow("boards-chips", boards, b => {
+      state.boards = state.boards === b ? "" : b;
+      saveData("state", state);
+      render();
+    });
+    render();
+  }
+
+  function buildChipRow(containerId, items, onClick) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    items.forEach(item => {
+      const btn = document.createElement("button");
+      btn.className = "chip";
+      btn.textContent = item;
+      btn.dataset.value = item;
+      btn.onclick = () => onClick(item);
+      container.appendChild(btn);
+    });
+  }
+
+  function buildSoundboard() {
+    const grid = document.getElementById("sound-grid");
+    grid.innerHTML = "";
+    sounds.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className = "sound-btn";
+      btn.textContent = s.label;
+      btn.onclick = () => {
+        const phrases = s.phrases || [];
+        if (!phrases.length) return;
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        speak(phrase, btn);
+      };
+      grid.appendChild(btn);
+    });
+  }
+
+  function speak(text, btn) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.onstart = () => btn && btn.classList.add("speaking");
+    utter.onend = () => btn && btn.classList.remove("speaking");
+    utter.onerror = () => btn && btn.classList.remove("speaking");
+    window.speechSynthesis.speak(utter);
+  }
+
+  function render() {
+    const banner = document.getElementById("banner-text");
+    const parts = [];
+    if (state.game) parts.push(state.game);
+    if (state.qualifier) parts.push(state.qualifier);
+    if (state.boards) {
+      const n = Number(state.boards);
+      if (!isNaN(n)) {
+        parts.push(n + " Board" + (n > 1 ? "s" : ""));
+      } else {
+        parts.push(state.boards);
+      }
+    }
+
+    if (parts.length) {
+      banner.innerHTML = parts.map(p => '<div>' + p + '</div>').join('');
+      banner.classList.remove("banner-placeholder");
+    } else {
+      banner.innerHTML = '<span class="banner-placeholder">Select a Game</span>';
+    }
+
+    document.querySelectorAll("#game-chips .chip").forEach(btn => {
+      btn.classList.toggle("selected", btn.dataset.value === state.game);
+    });
+    document.querySelectorAll("#qualifier-chips .chip").forEach(btn => {
+      btn.classList.toggle("selected", btn.dataset.value === state.qualifier);
+    });
+    document.querySelectorAll("#boards-chips .chip").forEach(btn => {
+      btn.classList.toggle("selected", btn.dataset.value === state.boards);
+    });
+
+    const notesText = document.getElementById("notes-text");
+    if (state.notes) {
+      notesText.textContent = state.notes;
+      notesText.classList.remove("notes-placeholder");
+    } else {
+      notesText.innerHTML = '<span class="notes-placeholder">No notes</span>';
+    }
+  }
+
+  // Cross-tab sync: update when admin page changes data
+  window.addEventListener("storage", e => {
+    if (e.key === KEYS.state) {
+      state = JSON.parse(e.newValue || "{}");
+      render();
+    }
+    if (e.key === KEYS.games) {
+      games = JSON.parse(e.newValue || "[]");
+      buildChips();
+    }
+    if (e.key === KEYS.qualifiers) {
+      qualifiers = JSON.parse(e.newValue || "[]");
+      buildChips();
+    }
+    if (e.key === KEYS.boards) {
+      boards = JSON.parse(e.newValue || "[]");
+      buildChips();
+    }
+    if (e.key === KEYS.sounds) {
+      sounds = JSON.parse(e.newValue || "[]");
+      buildSoundboard();
+    }
+  });
+
+  buildChips();
+  buildSoundboard();
+  render();
+</script>
+</body>
+</html>
