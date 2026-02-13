@@ -1,3 +1,39 @@
+// --- Password ---
+const APP_PASSWORD = "kotolegacypoker!@#";
+
+function checkAuth() {
+  if (sessionStorage.getItem("poker_auth") === "1") return true;
+  return false;
+}
+
+function showAuthGate() {
+  if (checkAuth()) return;
+  const overlay = document.createElement("div");
+  overlay.id = "auth-gate";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:#1a1a2e;display:flex;align-items:center;justify-content:center;";
+  overlay.innerHTML = `
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:16px;">Enter Password</div>
+      <input type="password" id="auth-input" placeholder="Password" style="width:260px;padding:14px 16px;background:#2a2a4a;border:2px solid #444;border-radius:12px;color:#e0e0e0;font-size:18px;font-family:inherit;outline:none;text-align:center;">
+      <div id="auth-error" style="color:#e94560;font-size:14px;margin-top:8px;opacity:0;">Wrong password</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const input = document.getElementById("auth-input");
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      if (input.value === APP_PASSWORD) {
+        sessionStorage.setItem("poker_auth", "1");
+        overlay.remove();
+      } else {
+        document.getElementById("auth-error").style.opacity = "1";
+        input.value = "";
+      }
+    }
+  });
+  setTimeout(() => input.focus(), 100);
+}
+
 // --- Storage Keys ---
 const KEYS = {
   state: "poker_state",
