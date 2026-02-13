@@ -168,6 +168,25 @@
     color: #fff;
   }
 
+  .bounce-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(0,0,0,0.7);
+    overflow: hidden;
+    display: none;
+  }
+  .bounce-overlay.active { display: block; }
+  .bounce-img {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e94560;
+    box-shadow: 0 0 30px rgba(233,69,96,0.6);
+  }
+
   .notes-bar {
     display: flex;
     align-items: center;
@@ -223,6 +242,10 @@
   </div>
 </div>
 
+<div class="bounce-overlay" id="bounce-overlay" onclick="stopBounce()">
+  <img class="bounce-img" id="bounce-img" src="andy.jpeg">
+</div>
+
 <script src="storage.js"></script>
 <script>
   showAuthGate();
@@ -275,6 +298,7 @@
         const phrases = s.phrases || [];
         if (!phrases.length) return;
         const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        if (s.label === "Hurry up, Andy") startBounce();
         speak(phrase, btn);
       };
       grid.appendChild(btn);
@@ -298,13 +322,43 @@
     speak(parts.join(", "), btn);
   }
 
+  // --- Bouncing image ---
+  let bounceAnim = null;
+  function startBounce() {
+    const overlay = document.getElementById("bounce-overlay");
+    const img = document.getElementById("bounce-img");
+    overlay.classList.add("active");
+    const size = 160;
+    let x = Math.random() * (window.innerWidth - size);
+    let y = Math.random() * (window.innerHeight - size);
+    let dx = (3 + Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1);
+    let dy = (3 + Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1);
+    function animate() {
+      x += dx;
+      y += dy;
+      if (x <= 0 || x >= window.innerWidth - size) dx = -dx;
+      if (y <= 0 || y >= window.innerHeight - size) dy = -dy;
+      img.style.left = x + "px";
+      img.style.top = y + "px";
+      bounceAnim = requestAnimationFrame(animate);
+    }
+    bounceAnim = requestAnimationFrame(animate);
+  }
+  function stopBounce() {
+    if (bounceAnim) {
+      cancelAnimationFrame(bounceAnim);
+      bounceAnim = null;
+    }
+    document.getElementById("bounce-overlay").classList.remove("active");
+  }
+
   function speak(text, btn) {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.95;
     utter.onstart = () => btn && btn.classList.add("speaking");
-    utter.onend = () => btn && btn.classList.remove("speaking");
-    utter.onerror = () => btn && btn.classList.remove("speaking");
+    utter.onend = () => { btn && btn.classList.remove("speaking"); stopBounce(); };
+    utter.onerror = () => { btn && btn.classList.remove("speaking"); stopBounce(); };
     window.speechSynthesis.speak(utter);
   }
 
